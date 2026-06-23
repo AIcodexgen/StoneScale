@@ -1,14 +1,26 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 
-// Root navigator. Auth gating and providers (React Query, etc.) are added in
-// later phases. For now it simply hosts the route groups.
+// One client for the whole app's server state. Created at module scope so it
+// is not re-instantiated on every render.
+const queryClient = new QueryClient();
+
+// Root navigator. Auth gating is added in a later phase. For now it hosts the
+// route groups and provides React Query.
 export default function RootLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="(auth)/login" />
-      <Stack.Screen name="add-item" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="invoice/[id]" />
-    </Stack>
+    <QueryClientProvider client={queryClient}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(auth)/login" />
+        <Stack.Screen name="add-item" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="invoice/[id]" />
+        {/* TEMPORARY (Phase 2) — debug screen, remove in a later phase. */}
+        <Stack.Screen
+          name="debug-products"
+          options={{ headerShown: true, title: 'Debug: Products' }}
+        />
+      </Stack>
+    </QueryClientProvider>
   );
 }
