@@ -1,7 +1,9 @@
-// Supabase client (Phase 2).
+// Supabase client (Phase 2, session persistence added in Phase 3).
 // Built from EXPO_PUBLIC_ env vars only — never hardcode the URL/key, and never
 // use the service role key in the app.
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
+import { AppState } from 'react-native';
 
 import type { Database } from './types';
 
@@ -17,10 +19,21 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
-    // Phase 2 has no persistent auth flow yet. Keep the session in memory so we
-    // don't need a storage adapter (AsyncStorage) before the auth phase adds one.
-    persistSession: false,
-    autoRefreshToken: false,
+    // Persist the session so the user stays logged in across app restarts.
+    storage: AsyncStorage,
+    persistSession: true,
+    autoRefreshToken: true,
+    // We use email/password, not URL-based (OAuth/magic link) sessions.
     detectSessionInUrl: false,
   },
+});
+
+// Keep the access token fresh only while the app is in the foreground, per the
+// Supabase + Expo guidance. (AppState is a no-op on web.)
+AppState.addEventListener('change', (state) => {
+  if (state === 'active') {
+    void supabase.auth.startAutoRefresh();
+  } else {
+    void supabase.auth.stopAutoRefresh();
+  }
 });
