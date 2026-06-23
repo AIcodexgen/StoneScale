@@ -199,6 +199,13 @@ begin
 end;
 $$;
 
+-- Only signed-in users may execute these; anon has no business calling them.
+-- (authenticated keeps an explicit grant; revoking public removes the implicit
+-- grant that would otherwise let anon reach them over /rest/v1/rpc.)
+revoke execute on function public.app_store_id()            from anon, public;
+revoke execute on function public.app_is_admin()            from anon, public;
+revoke execute on function public.next_invoice_number(uuid) from anon, public;
+
 grant execute on function public.app_store_id()            to authenticated;
 grant execute on function public.app_is_admin()            to authenticated;
 grant execute on function public.next_invoice_number(uuid) to authenticated;
